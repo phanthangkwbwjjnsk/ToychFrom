@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DefurtMenu</title>
+<style>
+  :root{
+    --bg:#0a0b10;
+    --card: rgba(255,255,255,.06);
+    --glass: rgba(255,255,255,.08);
+    --txt:#e8ecf1;
+    --muted:#a7b0c0;
+    --primary:#6cf2ff;
+    --accent:#9d6cff;
+    --ok:#20d29c;
+    --warn:#ffcc66;
+    --danger:#ff6b81;
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--txt); font:500 15px/1.5 "Inter",system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    background: radial-gradient(1200px 900px at 10% -10%, #0b1230 0%, #0a0b10 45%, #07080e 100%), #0a0b10;
+    overflow-x:hidden;
+  }
+  /* animated particles */
+  .particles{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.6}
+  .particles span{
+    position:absolute; width:2px; height:2px; background:linear-gradient(45deg,var(--primary),var(--accent));
+    border-radius:50%; filter:blur(.5px); animation: drift linear infinite; opacity:.7;
+  }
+  @keyframes drift{
+    from{transform:translateY(110vh) translateX(0)}
+    to{transform:translateY(-10vh) translateX(40px)}
+  }
+
+  header{
+    position:sticky; top:0; z-index:3;
+    backdrop-filter: blur(8px);
+    background: linear-gradient(180deg, rgba(10,11,16,.65), rgba(10,11,16,.25));
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:18px 16px}
+  .title{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .badge{
+    padding:4px 10px; border-radius:999px; background:linear-gradient(90deg,var(--primary),var(--accent));
+    color:#061016; font-weight:700; letter-spacing:.3px; box-shadow: var(--shadow);
+  }
+  h1{margin:0; font-size:22px; letter-spacing:.4px}
+  .actions{margin-left:auto; display:flex; gap:10px; flex-wrap:wrap}
+  .btn{
+    appearance:none; border:none; cursor:pointer; padding:10px 14px; border-radius:12px;
+    color:var(--txt); background:var(--glass); backdrop-filter: blur(10px);
+    border:1px solid rgba(255,255,255,.1); transition:.25s transform, .25s background, .25s box-shadow;
+  }
+  .btn:hover{transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,.25)}
+  .btn.primary{background: linear-gradient(90deg, rgba(108,242,255,.2), rgba(157,108,255,.2)); border-color:rgba(255,255,255,.18)}
+  .btn.ok{background:linear-gradient(90deg, rgba(32,210,156,.2), rgba(108,242,255,.18))}
+  .btn.warn{background:linear-gradient(90deg, rgba(255,204,102,.18), rgba(157,108,255,.18))}
+  .btn.danger{background:linear-gradient(90deg, rgba(255,107,129,.18), rgba(157,108,255,.18))}
+
+  main{position:relative; z-index:1}
+  .grid{
+    max-width:1080px; margin:26px auto; padding:0 16px;
+    display:grid; grid-template-columns: repeat(12, 1fr); gap:16px;
+  }
+  .card{
+    grid-column: span 12;
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border:1px solid rgba(255,255,255,.12); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding:16px;
+  }
+  .card h3{margin:0 0 6px; font-size:16px}
+  .card p{margin:0; color:var(--muted); font-size:13px}
+  .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px}
+
+  /* toggle */
+  .toggle{
+    --w:52px; --h:30px;
+    position:relative; width:var(--w); height:var(--h);
+  }
+  .toggle input{display:none}
+  .track{
+    position:absolute; inset:0; border-radius:999px; background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.18); box-shadow: inset 0 2px 8px rgba(0,0,0,.35);
+    transition:.25s;
+  }
+  .knob{
+    position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, #fff, #cfefff);
+    box-shadow:0 6px 16px rgba(0,0,0,.45); transition:.25s;
+  }
+  .toggle input:checked ~ .track{
+    background: linear-gradient(90deg, rgba(108,242,255,.35), rgba(157,108,255,.35));
+    border-color: rgba(255,255,255,.36);
+  }
+  .toggle input:checked ~ .knob{left:calc(100% - 27px);}
+
+  /* slider */
+  .control{display:grid; gap:6px; min-width:220px}
+  .control label{font-size:13px; color:var(--muted)}
+  .control output{font-weight:700; margin-left:8px; color:var(--primary)}
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none; width:260px; height:6px; border-radius:999px;
+    background:linear-gradient(90deg, var(--primary), var(--accent)); outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%;
+    background:#fff; border:2px solid #cfefff; box-shadow:0 4px 12px rgba(0,0,0,.35);
+  }
+
+  /* footer bar */
+  .bar{
+    position:sticky; bottom:0; z-index:3; background:linear-gradient(180deg, rgba(10,11,16,.05), rgba(10,11,16,.65));
+    border-top:1px solid rgba(255,255,255,.1); backdrop-filter: blur(8px);
+  }
+  .bar .wrap{display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap}
+
+  /* toast */
+  .toast{
+    position:fixed; right:18px; bottom:18px; z-index:4; display:grid; gap:8px; width:min(380px, calc(100% - 36px));
+  }
+  .toast .item{
+    background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
+    border:1px solid rgba(255,255,255,.18); border-radius:14px; padding:12px 12px 12px 14px; box-shadow:var(--shadow);
+    display:flex; gap:10px; align-items:flex-start; animation: slide .25s ease;
+  }
+  @keyframes slide{from{transform:translateY(8px); opacity:0} to{transform:translateY(0); opacity:1}}
+  .item .dot{width:10px; height:10px; border-radius:50%}
+  .item.ok .dot{background:var(--ok)} .item.warn .dot{background:var(--warn)} .item.danger .dot{background:var(--danger)}
+  .item .msg{flex:1; color:var(--txt)} .item .x{cursor:pointer; opacity:.7}
+
+  /* modal */
+  .modal{position:fixed; inset:0; display:none; place-items:center; z-index:5; background:rgba(0,0,0,.45); padding:16px}
+  .modal.open{display:grid}
+  .panel{
+    width:min(560px, 100%); background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.06));
+    border:1px solid rgba(255,255,255,.2); border-radius:18px; padding:18px; box-shadow: var(--shadow);
+  }
+  .panel h3{margin:0 0 8px}
+  .panel .actions{margin-top:12px}
+  .panel a{color:var(--primary); word-break:break-all}
+
+  /* layout responsive */
+  @media (min-width:700px){
+    .card--half{grid-column: span 6}
+    .card--third{grid-column: span 4}
+  }
+</style>
+</head>
+<body>
+  <!-- particles -->
+  <div class="particles" id="particles"></div>
+
+  <header>
+    <div class="wrap title">
+      <div class="badge">Menu Config HoawngTuan🐸</div>
+      <h1>MenuApp Config Super Sensi mobile📲⚙️</h1>
+      <div class="actions">
+        <button class="btn primary" id="openBio">zl:0389174943</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid">
+      <article class="card card--half">
+        <h3>Trạng thái nhanh</h3>
+        <p>Hãy Bật Các Chức Năng Để Sử Dụng.</p>
+        <div class="row">
+          <div>
+            <div class="row" style="align-items:center; gap:10px">
+              <strong>AimLock</strong>
+              <label class="toggle">
+                <input type="checkbox" id="tgl-AimLock">
+                <span class="track"></span>
+                <span class="knob"></span>
+              </label>
+            </div>
+            <p class="muted">Khi Sử Dụng AimLock Nên Offset Menu Để Kích Hoạt.</p>
+          </div>
+          <div>
+            <div class="row" style="align-items:center; gap:10px">
+              <strong>Dpi Power</strong>
+              <label class="toggle">
+                <input type="checkbox" id="tgl-autoaim">
+                <span class="track"></span>
+                <span class="knob"></span>
+              </label>
+            </div>
+            <p class="muted">Kích Hoạt Dpi Power.</p>
+          </div>
+          <div>
+            <div class="row" style="align-items:center; gap:10px">
+              <strong>AimLock X</strong>
+              <label class="toggle">
+                <input type="checkbox" id="tgl-AimLock X">
+                <span class="track"></span>
+                <span class="knob"></span>
+              </label>
+            </div>
+            <p class="muted">Kích Hoạt AimLock X.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row" style="align-items:center; gap:10px">
+            <strong>Buff Dpi</strong>
+            <label class="toggle">
+              <input type="checkbox" id="tgl-Buff Dpi">
+              <span class="track"></span>
+              <span class="knob"></span>
+            </label>
+          </div>
+          <div class="row" style="align-items:center; gap:10px">
+            <strong>Fix Rung</strong>
+            <label class="toggle">
+              <input type="checkbox" id="tgl-FixRung">
+              <span class="track"></span>
+              <span class="knob"></span>
+            </label>
+          </div>
+          <!-- Ultra Speed -->
+          <div class="row" style="align-items:center; gap:10px">
+            <strong>Ultra Config</strong>
+            <label class="toggle">
+              <input type="checkbox" id="tgl-speed">
+              <span class="track"></span>
+              <span class="knob"></span>
+            </label>
+          </div>
+        </div>
+      </article>
+
+      <article class="card card--half">
+        <h3>Độ nhạy & Dpl</h3>
+        <p>Chỉnh Root Độ Nhạy & Dpi.</p>
+
+        <div class="row">
+          <div class="control">
+            <label for="sens">Độ nhạy: <output id="sensOut">60</output></label>
+            <input type="range" min="1" max="10800" step="1" id="sens" value="10800">
+          </div>
+          <div class="control">
+            <label for="firebtn">Tinh Chỉnh Dpi: <output id="fireOut">350</output></label>
+            <input type="range" min="001" max="600" step="1" id="firebtn" value="1200">
+          </div>
+          <div class="control">
+            <label for="scope">Buff Nhạy: <output id="scopeOut">100</output></label>
+            <input type="range" min="1" max="360" step="1" id="scope" value="001">
+          </div>
+        </div>
+
+        <div class="row">
+          <label>Preset:</label>
+          <select id="Nâng Cao Phần Dpi Power" class="btn">
+            <option value="custom">Chỉ Số Dpi</option>
+            <option value="standard">Cap</option>
+            <option value="pro">Max</option>
+            <option value="max">Nâng Cao</option>
+          </select>
+          <button class="btn ok" id="applyPreset">Kích Hoạt Dpi Power</button>
+        </div>
+      </article>
+
+      <article class="card card--third">
+        <h3>Dpl Power</h3>
+        <p></p>
+        <div class="row" style="align-items:center">
+          <label class="toggle">
+            <input type="checkbox" id="tgl-fireflash">
+            <span class="track"></span><span class="knob"></span>
+          </label>
+          <button class="btn" id="testFire">Kích Hoạt Dpl Power</button>
+        </div>
+      </article>
+
+      <article class="card card--third">
+        <h3>HoangTuan🐸</h3>
+        <p></p>
+        <div class="row">
+          <button class="btn" id="saveBtn">Bật AimLock</button>
+          <button class="btn warn" id="resetBtn">Bật Dpi Power</button>
+        </div>
+      </article>
+
+      <article class="card card--third">
+        <h3>Thông tin</h3>
+        <p> LƯU Ý:CONFIG KO PHẢI PHẦN MỀM THỨ 3 NÊN KO FULL ĐỎ 100% DC , NÓ HỖ TRỢ AE KÉO CÓ TD NHƯ FIX RUNG,NHẸ TÂM,ĐẦM TÂM VÙNG ĐẦU…. .</p>
+        <ul style="margin:10px 0 0; padding-left:18px; color:var(--muted)">
+          <li> Hỗ Trợ Tất Cả Thiết Bị</li>
+          <li>Ios Cao Thấp Đều Cài Được</li>
+          <li>Lưu Ý Chỉ Hỗ Trợ Nên Ko Phải Aim Nên Atiband Nhé</li>
+        </ul>
+      </article>
+    </section>
+  </main>
+
+  <div class="bar">
+    <div class="wrap">
+      <button class="btn ok" id="applyBtn"></button>
+      <button class="btn primary" id="simulateBtn"></button>
+      <span style="color:var(--muted)">•Support regedit-Dpiconfig⚙️ HoawngTuan🐸: <strong id="status">HoawngTuanreal🐸</strong></span>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- hidden file input -->
+  <input type="file" id="fileInput" accept="application/json" style="display:none" />
+
+  <!-- modal -->
+  <div class="modal" id="bioModal" aria-hidden="true">
+    <div class="panel">
+      <h3>Link Bio của bạn</h3>
+      <p><a href="https://linkbio.co/phthangrealife2850" target="_blank" rel="noopener">https://linkbio.co/phthangrealife2850</a></p>
+      <div class="actions">
+        <button class="btn" id="closeBio">Đóng</button>
+        <a class="btn primary" href="https://linkbio.co/phthangrealife2850" target="_blank" rel="noopener">Mở Link</a>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ===== particles ===== */
+(function makeParticles(){
+  const wrap = document.getElementById('particles');
+  const count = Math.min(80, Math.floor(window.innerWidth/12));
+  for(let i=0;i<count;i++){
+    const s = document.createElement('span');
+    const left = Math.random()*100;
+    const delay = Math.random()*6;
+    const dur = 6 + Math.random()*8;
+    s.style.left = left+'vw';
+    s.style.bottom = (-10 + Math.random()*120) + 'vh';
+    s.style.animationDuration = dur+'s';
+    s.style.animationDelay = (-delay)+'s';
+    s.style.opacity = 0.35 + Math.random()*0.6;
+    wrap.appendChild(s);
+  }
+})();
+
+/* ===== helpers ===== */
+const $ = sel => document.querySelector(sel);
+const cfgKey = 'ff_support_menu_cfg_v1';
+const defaults = {
+  keotam:false, autoaim:false, aimlock:false, buffdpl:false, fixrung:false, speed:false, fireflash:false,
+  sens:60, firebtn:45, scope:40, preset:"custom"
+};
+function getCfg(){ try{ return {...defaults, ...(JSON.parse(localStorage.getItem(cfgKey)||'{}'))}; }catch{ return {...defaults}; } }
+function setCfg(data){ localStorage.setItem(cfgKey, JSON.stringify(data)); }
+function toast(msg, type='ok', timeout=3000){
+  const box = $('#toast'); const it = document.createElement('div');
+  it.className = 'item '+type;
+  it.innerHTML = `<div class="dot"></div><div class="msg">${msg}</div><div class="x">✕</div>`;
+  box.appendChild(it);
+  const kill = ()=>{ it.style.opacity=0; setTimeout(()=>it.remove(),250); };
+  it.querySelector('.x').onclick = kill;
+  setTimeout(kill, timeout);
+}
+
+/* ===== bind controls ===== */
+const cfg = getCfg();
+const binds = {
+  '#tgl-keotam':'keotam', '#tgl-autoaim':'autoaim', '#tgl-aimlock':'aimlock', '#tgl-buffdpl':'buffdpl',
+  '#tgl-fixrung':'fixrung', '#tgl-speed':'speed', '#tgl-fireflash':'fireflash',
+  '#sens':'sens', '#firebtn':'firebtn', '#scope':'scope', '#preset':'preset'
+};
+
+for(const sel in binds){
+  const key = binds[sel], el = $(sel);
+  if(!el) continue;
+  if(el.type === 'checkbox') el.checked = !!cfg[key];
+  else el.value = cfg[key];
+
+  el.addEventListener('input', e=>{
+    cfg[key] = (el.type==='checkbox') ? el.checked : (el.type==='range' ? Number(el.value) : el.value);
+    if(el.id==='sens') $('#sensOut').textContent = cfg.sens;
+    if(el.id==='firebtn') $('#fireOut').textContent = cfg.firebtn;
+    if(el.id==='scope') $('#scopeOut').textContent = cfg.scope;
+    if(el.id==='preset' && cfg.preset!=='custom') toast(`Preset đang chọn: ${cfg.preset.toUpperCase()}`, 'ok', 1400);
+    setCfg(cfg);
+  });
+}
+// init outputs
+$('#sensOut').textContent = cfg.sens;
+$('#fireOut').textContent = cfg.firebtn;
+$('#scopeOut').textContent = cfg.scope;
+
+/* ===== Presets ===== */
+const presets = {
+  standard:{sens:60, firebtn:45, scope:40},
+  pro:{sens:72, firebtn:42, scope:50},
+  max:{sens:88, firebtn:48, scope:68}
+};
+$('#applyPreset').onclick = ()=>{
+  const p = $('#preset').value;
+  if(p==='custom') return toast('Bạn đang ở chế độ Tự chỉnh.', 'warn');
+  Object.assign(cfg, presets[p], {preset:p});
+  $('#sens').value = cfg.sens; $('#firebtn').value = cfg.firebtn; $('#scope').value = cfg.scope;
+  $('#sensOut').textContent = cfg.sens; $('#fireOut').textContent = cfg.firebtn; $('#scopeOut').textContent = cfg.scope;
+  setCfg(cfg);
+  toast(`Đã áp dụng preset ${p.toUpperCase()}`, 'ok');
+};
+
+/* ===== Apply / Simulate / Save / Reset ===== */
+$('#applyBtn').onclick = ()=>{
+  $('#status').textContent = 'Đang áp dụng…';
+  // fake mini progress via simulate
+  simulate(1000).then(()=>{
+    $('#status').textContent = 'Đã áp dụng cấu hình';
+    toast('Áp dụng xong (UI demo).', 'ok');
+  });
+};
+$('#simulateBtn').onclick = ()=> simulate(3000);
+function simulate(ms){
+  const steps = Math.max(6, Math.floor(ms/150));
+  let i=0; toast('Đang mô phỏng áp dụng…', 'warn', ms+800);
+  return new Promise(res=>{
+    const t = setInterval(()=>{
+      i++;
+      if(i>=steps){ clearInterval(t); res(); }
+    }, ms/steps);
+  });
+}
+
+$('#saveBtn').onclick = ()=>{
+  setCfg(cfg);
+  toast('Kichs Hoạt AimLock', 'ok');
+};
+
+$('#resetBtn').onclick = ()=>{
+  Object.assign(cfg, {...defaults}); setCfg(cfg);
+  for(const sel in binds){
+    const el = $(sel), key = binds[sel];
+    if(el.type==='checkbox') el.checked = !!cfg[key];
+    else el.value = cfg[key];
+  }
+  $('#sensOut').textContent = cfg.sens; $('#fireOut').textContent = cfg.firebtn; $('#scopeOut').textContent = cfg.scope;
+  $('#preset').value = 'custom';
+  $('#status').textContent = 'Đã reset';
+  toast('Đã đặt lại toàn bộ về mặc định.', 'warn');
+};
+
+/* ===== Export / Import JSON ===== */
+$('#exportBtn').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(cfg,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'keo_tam_config.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('Đã xuất file keo_tam_config.json', 'ok');
+};
+$('#importBtn').onclick = ()=> $('#fileInput').click();
+$('#fileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  try{
+    const text = await file.text(); const data = JSON.parse(text);
+    Object.assign(cfg, {...defaults, ...data}); setCfg(cfg);
+    for(const sel in binds){
+      const el = $(sel), key = binds[sel];
+      if(el.type==='checkbox') el.checked = !!cfg[key];
+      else el.value = cfg[key];
+    }
+    $('#sensOut').textContent = cfg.sens; $('#fireOut').textContent = cfg.firebtn; $('#scopeOut').textContent = cfg.scope;
+    $('#preset').value = cfg.preset || 'custom';
+    toast('Nhập cấu hình thành công.', 'ok');
+  }catch(err){ console.error(err); toast('Lỗi nhập file JSON.', 'danger'); }
+});
+
+/* ===== Fire button test ===== */
+$('#testFire').onclick = ()=>{
+  if(!$('#tgl-fireflash').checked) return toast('Bật "Nút bắn ảo" trước khi test.', 'warn');
+  const btn = document.createElement('div');
+  btn.textContent = 'FIRE';
+  Object.assign(btn.style, {
+    position:'fixed', right:'18px', bottom:'90px', padding:'14px 18px', borderRadius:'999px',
+    background:'linear-gradient(90deg, rgba(108,242,255,.35), rgba(157,108,255,.35))',
+    border:'1px solid rgba(255,255,255,.36)', backdropFilter:'blur(8px)', color:'#fff', fontWeight:'800',
+    boxShadow:'0 10px 24px rgba(0,0,0,.4)', zIndex:4, letterSpacing:'1px'
+  });
+  document.body.appendChild(btn);
+  let t=0, max=6;
+  const timer = setInterval(()=>{
+    btn.style.opacity = (t%2? .35: 1);
+    t++; if(t>max){ clearInterval(timer); btn.remove(); }
+  }, 140);
+  toast('Nháy nút bắn ảo xong.', 'ok', 1200);
+};
+
+/* ===== Bio modal ===== */
+$('#openBio').onclick = ()=> $('#bioModal').classList.add('open');
+$('#closeBio').onclick = ()=> $('#bioModal').classList.remove('open');
+
+</script>
+</body>
+</html>
